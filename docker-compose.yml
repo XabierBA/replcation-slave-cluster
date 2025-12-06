@@ -7,7 +7,7 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_REPLICATION_USER=replica
-      - MYSQL_REPLICATION_PASSWORD=replica_password
+      - MYSQL_REPLICATION_PASSWORD=root
     ports:
       - "3306:3306"
     networks:
@@ -22,7 +22,7 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_REPLICATION_USER=replica
-      - MYSQL_REPLICATION_PASSWORD=replica_password
+      - MYSQL_REPLICATION_PASSWORD=root
     networks:
       - mysql_network
     volumes:
@@ -35,7 +35,7 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_REPLICATION_USER=replica
-      - MYSQL_REPLICATION_PASSWORD=replica_password
+      - MYSQL_REPLICATION_PASSWORD=root
     networks:
       - mysql_network
     volumes:
