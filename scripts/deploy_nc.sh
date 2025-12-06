@@ -14,19 +14,6 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
 
-# 1. Levantar contenedores de MySQL
-echo -e "\n${CYAN}Iniciando los contenedores MySQL...${NC}"
-docker run --name $MASTER_CONTAINER -e MYSQL_ROOT_PASSWORD=$MYSQL_PASSWORD -d mysql:5.7
-docker run --name $SLAVE1_CONTAINER -e MYSQL_ROOT_PASSWORD=$MYSQL_PASSWORD -d mysql:5.7
-docker run --name $SLAVE2_CONTAINER -e MYSQL_ROOT_PASSWORD=$MYSQL_PASSWORD -d mysql:5.7
-
-# Esperar un momento para que los contenedores se inicien
-echo -e "${YELLOW}Esperando que los contenedores se inicien...${NC}"
-sleep 30
-
-# 2. Verificar si MySQL está listo en los contenedores
-echo -e "${CYAN}Esperando a que MySQL esté listo en los contenedores...${NC}"
-
 # Función para verificar si MySQL está listo en el contenedor
 wait_for_mysql() {
     CONTAINER=$1
@@ -37,7 +24,17 @@ wait_for_mysql() {
     echo -e "${GREEN}MySQL está listo en $CONTAINER.${NC}"
 }
 
-# Esperamos que MySQL esté listo en el master y los slaves
+# 1. Levantar contenedores de MySQL
+echo -e "\n${CYAN}Iniciando los contenedores MySQL...${NC}"
+docker run --name $MASTER_CONTAINER -e MYSQL_ROOT_PASSWORD=$MYSQL_PASSWORD -d mysql:5.7
+docker run --name $SLAVE1_CONTAINER -e MYSQL_ROOT_PASSWORD=$MYSQL_PASSWORD -d mysql:5.7
+docker run --name $SLAVE2_CONTAINER -e MYSQL_ROOT_PASSWORD=$MYSQL_PASSWORD -d mysql:5.7
+
+# Esperar un momento para que los contenedores se inicien
+echo -e "${YELLOW}Esperando que los contenedores se inicien...${NC}"
+sleep 30  # Asegurarnos de que los contenedores se inicien correctamente
+
+# 2. Esperar hasta que MySQL esté disponible
 wait_for_mysql $MASTER_CONTAINER
 wait_for_mysql $SLAVE1_CONTAINER
 wait_for_mysql $SLAVE2_CONTAINER
@@ -47,7 +44,12 @@ echo -e "${CYAN}Configurando el Master...${NC}"
 docker exec -it $MASTER_CONTAINER bash -c "echo '[mysqld]' >> /etc/mysql/my.cnf"
 docker exec -it $MASTER_CONTAINER bash -c "echo 'log-bin=mysql-bin' >> /etc/mysql/my.cnf"
 docker exec -it $MASTER_CONTAINER bash -c "echo 'server-id=1' >> /etc/mysql/my.cnf"
+docker exec -it $MASTER_CONTAINER bash -c "echo 'bind-address=0.0.0.0' >> /etc/mysql/my.cnf"  # Permitir conexiones externas
 docker restart $MASTER_CONTAINER
+
+# Esperar un poco después de reiniciar el contenedor master
+echo -e "${YELLOW}Esperando que MySQL en $MASTER_CONTAINER se inicie después del reinicio...${NC}"
+sleep 10  # Esperar un poco más para que MySQL se inicie
 
 # Configuración MySQL en el master
 docker exec -it $MASTER_CONTAINER mysql -u root -p$MYSQL_PASSWORD -h 127.0.0.1 -e "
@@ -66,10 +68,14 @@ for SLAVE in $SLAVE1_CONTAINER $SLAVE2_CONTAINER; do
   docker exec -it $SLAVE bash -c "echo 'read-only=1' >> /etc/mysql/my.cnf"
   docker restart $SLAVE
 
+  # Esperar un poco después de reiniciar los slaves
+  echo -e "${YELLOW}Esperando que MySQL en $SLAVE se inicie después del reinicio...${NC}"
+  sleep 10  # Esperar un poco más para que MySQL se inicie
+
   # Conectar al Master desde el Slave y configurar la replicación
   docker exec -it $SLAVE mysql -u root -p$MYSQL_PASSWORD -h 127.0.0.1 -e "
   CHANGE MASTER TO
-      MASTER_HOST = 'mysql-master',
+      MASTER_HOST = '$MASTER_CONTAINER',
       MASTER_USER = 'replica',
       MASTER_PASSWORD = 'root',
       MASTER_LOG_FILE = 'mysql-bin.000001',
