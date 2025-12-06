@@ -126,3 +126,95 @@ CREATE TABLE EVENTO(
     FOREIGN KEY(id_participante) REFERENCES PARTICIPANTE(id_participante),
     FOREIGN KEY(id_medalla) REFERENCES MEDALLA(id_medalla)
 );
+
+
+-- =====================================
+-- INSERT DE LAS TABLAS
+-- =====================================
+
+-- TABLA PAIS
+INSERT INTO PAIS (cod_iso, nombre) VALUES ('ESP', 'España');
+INSERT INTO PAIS (cod_iso, nombre) VALUES ('FRA', 'Francia');
+
+
+-- TABLA SEDE
+INSERT INTO SEDE (id_sede, nombre, ciudad, aforo, cod_iso, anho) VALUES
+(1, 'Palacio de Deportes', 'Madrid', 15000, 'ESP', 2025),
+(2, 'Stade de France', 'París', 80000, 'FRA', 2025);
+
+
+-- TABLA DEPORTE
+INSERT INTO DEPORTE (id_deporte, nombre) VALUES (1, 'Natación');
+INSERT INTO DEPORTE (id_deporte, nombre) VALUES (2, 'Atletismo');
+
+
+-- TABLA DISCIPLINA
+INSERT INTO DISCIPLINA (id_deporte, id_disciplina, nombre, categoria) VALUES (1, 1, '100m Libre', 'M');
+INSERT INTO DISCIPLINA (id_deporte, id_disciplina, nombre, categoria) VALUES (1, 2, '200m Libre', 'F');
+INSERT INTO DISCIPLINA (id_deporte, id_disciplina, nombre, categoria) VALUES (2, 1, '100m Lisos', 'M');
+
+
+-- TABLA PARTICIPANTE
+INSERT INTO PARTICIPANTE (id_participante, nombre, tipo, cod_iso) VALUES (1, 'España Natación', 'EQUIPO', 'ESP');
+INSERT INTO PARTICIPANTE (id_participante, nombre, tipo, cod_iso) VALUES (2, 'Juan Pérez', 'ATLETA', 'ESP');
+INSERT INTO PARTICIPANTE (id_participante, nombre, tipo, cod_iso) VALUES (3, 'Francia Atletismo', 'EQUIPO', 'FRA');
+
+
+-- TABLA ATLETA
+INSERT INTO ATLETA (dni, edad, genero, id_participante) VALUES ('12345678A', 22, 'M', 2);
+
+
+-- TABLA EQUIPO
+INSERT INTO EQUIPO (id_equipo, id_participante) VALUES (1, 1);
+INSERT INTO EQUIPO (id_equipo, id_participante) VALUES (2, 3);
+
+
+-- TABLA CUERPO_TECNICO
+INSERT INTO CUERPO_TECNICO (id_cuerpotec, dni, id_participante) VALUES (1, '87654321B', 1);
+
+
+-- TABLA FISIOTERAPEUTA
+INSERT INTO FISIOTERAPEUTA (id_fisio, titulacion, id_cuerpotec) VALUES (1, 'Licenciado en Fisioterapia', 1);
+
+
+-- TABLA ENTRENADOR
+INSERT INTO ENTRENADOR (id_entrenador, especialidad, id_cuerpotec) VALUES (1, 'Natación de velocidad', 1);
+
+
+-- TABLA PSICOLOGO
+INSERT INTO PSICOLOGO (id_psicologo, licencia, id_cuerpotec) VALUES (1, 'Licencia Psicología Deportiva', 1);
+
+
+-- TABLA MEDALLA
+INSERT INTO MEDALLA (id_medalla, tipo) VALUES (1, 'Oro');
+INSERT INTO MEDALLA (id_medalla, tipo) VALUES (2, 'Plata');
+
+
+-- TABLA EVENTO
+INSERT INTO EVENTO (fecha, id_deporte, id_disciplina, id_sede, id_medalla, id_participante)
+VALUES ('2025-07-15', 1, 1, 1, 1, 1);
+INSERT INTO EVENTO (fecha, id_deporte, id_disciplina, id_sede, id_medalla, id_participante)
+VALUES ('2025-07-15', 1, 1, 1, 2, 2);
+
+
+-- =====================================
+-- SENTENCIAS DE COMPROBACIÓN
+-- =====================================
+
+SELECT * FROM PAIS;
+SELECT * FROM SEDE;
+SELECT * FROM DEPORTE;
+SELECT * FROM DISCIPLINA;
+SELECT * FROM PARTICIPANTE;
+SELECT * FROM ATLETA;
+SELECT * FROM EQUIPO;
+SELECT * FROM CUERPO_TECNICO;
+SELECT * FROM FISIOTERAPEUTA;
+SELECT * FROM ENTRENADOR;
+SELECT * FROM PSICOLOGO;
+SELECT * FROM MEDALLA;
+SELECT * FROM EVENTO;
+SELECT * FROM vista_participante_actualizable;
+SELECT * FROM vista_atleta_actualizable;
+SELECT * FROM vista_medallas_pais;
+SELECT * FROM vista_disciplinas_deporte;

@@ -3,7 +3,7 @@ version: '3'
 services:
   # Nodo MySQL 1 (Master)
   mysql1:
-    image: mysql:8.0
+    image: mysql:5.7
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_REPLICATION_USER=replica
@@ -14,11 +14,12 @@ services:
       - mysql_network
     volumes:
       - mysql1-data:/var/lib/mysql
+      - ../init-files/init.sql:/tmp/init.sql  # Montaje del archivo init.sql
     command: --server-id=1 --log-bin=mysql-bin --binlog-do-db=testdb
 
   # Nodo MySQL 2 (Slave)
   mysql2:
-    image: mysql:8.0
+    image: mysql:5.7
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_REPLICATION_USER=replica
@@ -31,7 +32,7 @@ services:
 
   # Nodo MySQL 3 (Slave)
   mysql3:
-    image: mysql:8.0
+    image: mysql:5.7
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_REPLICATION_USER=replica
@@ -46,9 +47,9 @@ services:
   haproxy:
     image: haproxy:latest
     ports:
-      - "3307:3306"  # Puerto de balanceo de carga
+      - "3307:3306"  # Puerto de balanceo de carga (MySQL balanceado en puerto 3307)
     volumes:
-      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+      - ./config/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg  # Montaje de archivo haproxy.cfg
     networks:
       - mysql_network
 
