@@ -214,7 +214,4 @@ SELECT * FROM ENTRENADOR;
 SELECT * FROM PSICOLOGO;
 SELECT * FROM MEDALLA;
 SELECT * FROM EVENTO;
-SELECT * FROM vista_participante_actualizable;
-SELECT * FROM vista_atleta_actualizable;
-SELECT * FROM vista_medallas_pais;
-SELECT * FROM vista_disciplinas_deporte;
+
