@@ -42,7 +42,12 @@ wait_for_mysql $MASTER_CONTAINER
 wait_for_mysql $SLAVE1_CONTAINER
 wait_for_mysql $SLAVE2_CONTAINER
 
-# 3. Configuración del Master
+# 3. Obtener la IP del contenedor Master
+MASTER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $MASTER_CONTAINER)
+
+echo -e "${BLUE}La IP del Master es: $MASTER_IP${NC}"
+
+# 4. Configuración del Master
 echo -e "\n${CYAN}Configurando el Master...${NC}"
 docker exec -it $MASTER_CONTAINER bash -c "echo '[mysqld]' >> /etc/mysql/my.cnf"
 docker exec -it $MASTER_CONTAINER bash -c "echo 'log-bin=mysql-bin' >> /etc/mysql/my.cnf"
@@ -62,7 +67,7 @@ GRANT REPLICATION SLAVE ON *.* TO 'replica'@'%' IDENTIFIED BY 'root';
 SHOW MASTER STATUS;
 "
 
-# 4. Configuración de los Slaves (mysql2 y mysql3)
+# 5. Configuración de los Slaves (mysql2 y mysql3)
 for SLAVE in $SLAVE1_CONTAINER $SLAVE2_CONTAINER; do
   echo -e "\n${CYAN}Configurando $SLAVE...${NC}"
   docker exec -it $SLAVE bash -c "echo '[mysqld]' >> /etc/mysql/my.cnf"
@@ -76,11 +81,11 @@ for SLAVE in $SLAVE1_CONTAINER $SLAVE2_CONTAINER; do
   echo -e "${YELLOW}⏳ Esperando que MySQL en $SLAVE se inicie después del reinicio...${NC}"
   sleep 10  # Esperar un poco más para que MySQL se inicie
 
-  # Conectar al Master desde el Slave y configurar la replicación
+  # Conectar al Master desde el Slave y configurar la replicación usando la IP del Master
   echo -e "${BLUE}Configurando la replicación en $SLAVE...${NC}"
   docker exec -it $SLAVE mysql -u root -p$MYSQL_PASSWORD -h 127.0.0.1 -e "
   CHANGE MASTER TO
-      MASTER_HOST = '$MASTER_CONTAINER',
+      MASTER_HOST = '$MASTER_IP',  # Usar la IP del master obtenida
       MASTER_USER = 'replica',
       MASTER_PASSWORD = 'root',
       MASTER_LOG_FILE = 'mysql-bin.000001',
@@ -89,12 +94,12 @@ for SLAVE in $SLAVE1_CONTAINER $SLAVE2_CONTAINER; do
   "
 done
 
-# 5. Verificar el estado de la replicación
+# 6. Verificar el estado de la replicación
 echo -e "\n${CYAN}Verificando el estado de la replicación en los Slaves...${NC}"
 docker exec -it $SLAVE1_CONTAINER mysql -u root -p$MYSQL_PASSWORD -h 127.0.0.1 -e "SHOW SLAVE STATUS\G" | grep "Slave_IO_Running"
 docker exec -it $SLAVE2_CONTAINER mysql -u root -p$MYSQL_PASSWORD -h 127.0.0.1 -e "SHOW SLAVE STATUS\G" | grep "Slave_IO_Running"
 
-# 6. Insertar base de datos usando init.sql
+# 7. Insertar base de datos usando init.sql
 if [ -f "$INIT_SQL_FILE" ]; then
     echo -e "${GREEN}✔ Ejecutando archivo init.sql para insertar la base de datos...${NC}"
     docker exec -i $MASTER_CONTAINER mysql -u root -p$MYSQL_PASSWORD -h 127.0.0.1 < $INIT_SQL_FILE
@@ -102,7 +107,7 @@ else
     echo -e "${RED}❌ No se encontró el archivo init.sql.${NC}"
 fi
 
-# 7. Verificar la replicación de datos
+# 8. Verificar la replicación de datos
 echo -e "${CYAN}Verificando que los datos se replican en los Slaves...${NC}"
 docker exec -it $SLAVE1_CONTAINER mysql -u root -p$MYSQL_PASSWORD -h 127.0.0.1 -e "SHOW DATABASES;"
 docker exec -it $SLAVE2_CONTAINER mysql -u root -p$MYSQL_PASSWORD -h 127.0.0.1 -e "SHOW DATABASES;"
